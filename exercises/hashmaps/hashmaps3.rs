@@ -14,8 +14,6 @@
 // Execute `rustlings hint hashmaps3` or use the `hint` watch subcommand for a
 // hint.
 
-// I AM NOT DONE
-
 use std::collections::HashMap;
 
 // A structure to store the goal details of a team.
@@ -24,21 +22,41 @@ struct Team {
     goals_conceded: u8,
 }
 
+struct MatchScore(String, String, u8, u8);
+struct TeamScore(String, u8, u8);
+
+fn update_team_stats(scores: &mut HashMap<String, Team>, match_score: TeamScore) {
+    let team = scores.entry(match_score.0).or_insert(Team {
+        goals_scored: 0,
+        goals_conceded: 0,
+    });
+    team.goals_scored += match_score.1;
+    team.goals_conceded += match_score.2;
+}
+
+fn get_home_team_score(rawScores: &MatchScore) -> TeamScore {
+    TeamScore(rawScores.0.to_string(), rawScores.2, rawScores.3)
+}
+fn get_away_team_score(rawScores: &MatchScore) -> TeamScore {
+    TeamScore(rawScores.1.to_string(), rawScores.3, rawScores.2)
+}
+
+fn get_match_score(rawScores: &str) -> MatchScore {
+    let v: Vec<&str> = rawScores.split(',').collect();
+    MatchScore(v[0].to_string(), v[1].to_string(), v[2].parse().unwrap(), v[3].parse().unwrap())
+}
+
 fn build_scores_table(results: String) -> HashMap<String, Team> {
     // The name of the team is the key and its associated struct is the value.
     let mut scores: HashMap<String, Team> = HashMap::new();
 
     for r in results.lines() {
-        let v: Vec<&str> = r.split(',').collect();
-        let team_1_name = v[0].to_string();
-        let team_1_score: u8 = v[2].parse().unwrap();
-        let team_2_name = v[1].to_string();
-        let team_2_score: u8 = v[3].parse().unwrap();
-        // TODO: Populate the scores table with details extracted from the
-        // current line. Keep in mind that goals scored by team_1
-        // will be the number of goals conceded from team_2, and similarly
-        // goals scored by team_2 will be the number of goals conceded by
-        // team_1.
+        let match_score = get_match_score(r);
+        let home_team_score = get_home_team_score(&match_score);
+        let away_team_score = get_away_team_score(&match_score);
+
+        update_team_stats(&mut scores, home_team_score);
+        update_team_stats(&mut scores, away_team_score);
     }
     scores
 }
